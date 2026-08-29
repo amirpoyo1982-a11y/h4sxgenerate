@@ -57,12 +57,8 @@
 
 <!-- HERO -->
 <section id="top" class="hero-band">
-  <div class="hero-anime-char hero-char-left">
-    <img src="https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=cute%20anime%20gamer%20girl%20with%20white%20hair%20and%20blue%20eyes%20holding%20a%20pink%20headphone%20bust%20shot%20transparent%20background%20kawaii%20style&image_size=portrait_4_3" alt="Anime Gamer Girl" onerror="this.style.display='none'">
-  </div>
-  <div class="hero-anime-char hero-char-right">
-    <img src="https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=cool%20anime%20gamer%20boy%20with%20silver%20hair%20and%20purple%20eyes%20wearing%20gaming%20hoodie%20bust%20shot%20transparent%20background%20anime%20style&image_size=portrait_4_3" alt="Anime Gamer Boy" onerror="this.style.display='none'">
-  </div>
+  <div class="hero-glow-orb orb-left" aria-hidden="true"></div>
+  <div class="hero-glow-orb orb-right" aria-hidden="true"></div>
 
   <div class="hero-band-inner">
     <div class="hero-tag">
@@ -158,11 +154,20 @@
         </div>
       </div>
 
+      <div class="browser-detect-box">
+        <div class="browser-detect-copy">
+          <strong>📡 Detect terus dari pelayar anda</strong>
+          <small>Guna maklumat pelayar (browser) untuk cari model sebenar — termasuk device yang xdak dalam senarai macam ASUS ROG Phone, RedMagic, dll.</small>
+        </div>
+        <button type="button" class="btn-browser-detect" id="btnBrowserDetect">🛰️ Auto-Detect Pelayar</button>
+        <div class="browser-detect-result" id="browserDetectResult" style="display:none;"></div>
+      </div>
+
       <div class="form-group">
         <label>🏷️ Nama Model Device <span style="font-weight:400;text-transform:none;letter-spacing:0">(auto detect jenama + RAM + DPI)</span></label>
         <div class="model-input-row">
           <input type="text" id="modelDeviceInput" class="model-input" list="modelSuggestions" placeholder="Contoh: Galaxy A54, Redmi Note 13 Pro, iPhone 15 Pro Max..." autocomplete="off" maxlength="60">
-          <button type="button" class="btn-model-detect" id="btnModelDetect">🔍 Auto-Detect</button>
+          <button type="button" class="btn-model-detect" id="btnModelDetect">🔍 Cari dalam DB</button>
         </div>
         <datalist id="modelSuggestions">
           <option value="Galaxy A03">
@@ -382,17 +387,16 @@
   <!-- DEVICE + DPI SUGGESTION BOX -->
   <div class="device-info-grid">
     <div class="device-info-card">
-      <div class="dinfo-head dinfo-device">
       <span class="dinfo-icon">📱</span>
-      <div>
+      <div class="dinfo-body">
         <span class="dinfo-label">Device dikesan</span>
         <span class="dinfo-value" id="dinfoDeviceName">—</span>
       </div>
     </div>
     <div class="dinfo-vs">↔</div>
-    <div class="dinfo-head dinfo-spec">
+    <div class="device-info-card">
       <span class="dinfo-icon">💡</span>
-      <div>
+      <div class="dinfo-body">
         <span class="dinfo-label">Cadangan DPI</span>
         <div class="dinfo-sensi">
           <span class="dinfo-value" id="dinfoSuggestedDpi">—</span>
@@ -401,11 +405,11 @@
       </div>
     </div>
     <div class="dinfo-vs">↔</div>
-    <div class="dinfo-head dinfo-version">
+    <div class="device-info-card">
       <span class="dinfo-icon">🔥</span>
-      <div>
+      <div class="dinfo-body">
         <span class="dinfo-label">Free Fire v2026</span>
-        <span class="dinfo-value">Scale: 0 – 200 max</span>
+        <span class="dinfo-value">Scale: 0–200 max</span>
       </div>
     </div>
   </div>
