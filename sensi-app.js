@@ -214,6 +214,39 @@
     { k: ['ipad pro 11 m2','ipad pro m2'],    b: 'apple',    r: 8, d: 620, l: 'iPad Pro 11" M2' },
     { k: ['ipad pro 12.9 m2','ipad m2'],      b: 'apple',    r: 8, d: 630, l: 'iPad Pro 12.9" M2' },
 
+    // ═══ ASUS ROG PHONE / ZENFONE (Gaming Flagship) ═══
+    // Codename keys (e.g. "asus_ai2201") match what browsers report via
+    // User-Agent Client Hints / Android UA for these models.
+    { k: ['rog phone 8 pro','ai2401_h'],      b: 'other', r: 8, d: 620, l: 'ASUS ROG Phone 8 Pro' },
+    { k: ['rog phone 8','ai2401'],            b: 'other', r: 8, d: 610, l: 'ASUS ROG Phone 8' },
+    { k: ['rog phone 7 ultimate','ai2302'],   b: 'other', r: 8, d: 610, l: 'ASUS ROG Phone 7 Ultimate' },
+    { k: ['rog phone 7','ai2301'],            b: 'other', r: 8, d: 600, l: 'ASUS ROG Phone 7' },
+    { k: ['rog phone 6d','ai2201_b'],         b: 'other', r: 8, d: 590, l: 'ASUS ROG Phone 6D' },
+    { k: ['rog phone 6 pro','ai2205'],        b: 'other', r: 8, d: 590, l: 'ASUS ROG Phone 6 Pro' },
+    { k: ['rog phone 6','ai2201'],            b: 'other', r: 8, d: 580, l: 'ASUS ROG Phone 6' },
+    { k: ['rog phone 5s pro','i006d_pro'],    b: 'other', r: 8, d: 580, l: 'ASUS ROG Phone 5s Pro' },
+    { k: ['rog phone 5s','i006d'],            b: 'other', r: 8, d: 570, l: 'ASUS ROG Phone 5s' },
+    { k: ['rog phone 5','i003d'],             b: 'other', r: 8, d: 560, l: 'ASUS ROG Phone 5' },
+    { k: ['rog phone 3','i003dd','i003d'],    b: 'other', r: 8, d: 540, l: 'ASUS ROG Phone 3' },
+    { k: ['rog phone 2','i001d'],             b: 'other', r: 8, d: 520, l: 'ASUS ROG Phone 2' },
+    { k: ['rog phone','asus_ai2','asus_i00'], b: 'other', r: 8, d: 570, l: 'ASUS ROG Phone (Gaming Flagship)' },
+    { k: ['zenfone 11'],                      b: 'other', r: 8, d: 540, l: 'ASUS Zenfone 11' },
+    { k: ['zenfone 10'],                      b: 'other', r: 8, d: 520, l: 'ASUS Zenfone 10' },
+    { k: ['zenfone 9'],                       b: 'other', r: 8, d: 500, l: 'ASUS Zenfone 9' },
+    { k: ['asus'],                            b: 'other', r: 8, d: 480, l: 'ASUS (Generic)' },
+
+    // ═══ OTHER GAMING PHONES ═══
+    { k: ['redmagic 9','red magic 9'],        b: 'other', r: 8, d: 610, l: 'Nubia RedMagic 9 (Gaming)' },
+    { k: ['redmagic 8','red magic 8'],        b: 'other', r: 8, d: 590, l: 'Nubia RedMagic 8 (Gaming)' },
+    { k: ['redmagic 7','red magic 7'],        b: 'other', r: 8, d: 570, l: 'Nubia RedMagic 7 (Gaming)' },
+    { k: ['redmagic','red magic'],            b: 'other', r: 8, d: 560, l: 'Nubia RedMagic (Gaming Generic)' },
+    { k: ['black shark 5','black shark 4'],   b: 'other', r: 8, d: 570, l: 'Black Shark (Gaming)' },
+    { k: ['black shark'],                     b: 'other', r: 8, d: 550, l: 'Black Shark (Gaming Generic)' },
+    { k: ['pixel 8'],                         b: 'other', r: 8, d: 520, l: 'Google Pixel 8 Series' },
+    { k: ['pixel 7'],                         b: 'other', r: 8, d: 500, l: 'Google Pixel 7 Series' },
+    { k: ['pixel 6'],                         b: 'other', r: 8, d: 480, l: 'Google Pixel 6 Series' },
+    { k: ['pixel'],                           b: 'other', r: 6, d: 460, l: 'Google Pixel (Generic)' },
+
     // ═══ GENERIC FALLBACK DETECT BY BRAND NAME ONLY ═══
     { k: ['samsung','galaxy'],                b: 'samsung',  r: 6, d: 440, l: 'Samsung (Generic)' },
     { k: ['xiaomi','redmi','poco','mi 13','mi 14'], b: 'xiaomi', r: 6, d: 450, l: 'Xiaomi / Redmi (Generic)' },
@@ -241,6 +274,130 @@
       if (matched) { found = entry; break; }
     }
     return found;
+  }
+
+  // ──────────────────────────────────────────
+  // 🆕 BROWSER-BASED DEVICE DETECTION
+  // Instead of relying only on manual typing + a fixed DB, we read
+  // real signals the browser (pelayar) exposes:
+  //   1) navigator.userAgentData.getHighEntropyValues(['model']) — on
+  //      Chromium-based Android browsers (Chrome/Edge/Opera Android)
+  //      this returns the EXACT device model code (e.g. "ASUS_AI2201"),
+  //      even for devices not in any hand-written list.
+  //   2) Fallback: parse the classic User-Agent string, which Android
+  //      WebViews always embed as "...; MODEL Build/...".
+  //   3) iOS/Safari never exposes a model in the UA, so we fall back to
+  //      screen resolution + pixel ratio which is unique per iPhone.
+  //   4) Hardware signals (deviceMemory, hardwareConcurrency, WebGL GPU
+  //      renderer string) are used to auto-ESTIMATE a sensible tier for
+  //      any device that still isn't found in MODEL_DB — so an unknown
+  //      or brand-new phone still gets real numbers, not a dead end.
+  // ──────────────────────────────────────────
+  var IOS_SCREEN_MAP = [
+    // [screenW, screenH, dpr] → label (portrait CSS px, longest known list first)
+    { w: 430, h: 932, dpr: 3, l: 'iPhone 15/14 Pro Max Series', d: 620 },
+    { w: 393, h: 852, dpr: 3, l: 'iPhone 15/14 Pro Series', d: 600 },
+    { w: 428, h: 926, dpr: 3, l: 'iPhone 13/12 Pro Max Series', d: 580 },
+    { w: 390, h: 844, dpr: 3, l: 'iPhone 13/12/14 Series', d: 560 },
+    { w: 414, h: 896, dpr: 2, l: 'iPhone 11 / XR Series', d: 520 },
+    { w: 414, h: 896, dpr: 3, l: 'iPhone 11 Pro Max / XS Max', d: 560 },
+    { w: 375, h: 812, dpr: 3, l: 'iPhone 13 mini / X / XS Series', d: 550 },
+    { w: 375, h: 667, dpr: 2, l: 'iPhone SE / 8 Series', d: 500 },
+    { w: 320, h: 568, dpr: 2, l: 'iPhone SE (1st Gen) / 5 Series', d: 460 }
+  ];
+
+  function normalizeRaw(s) {
+    return (s || '').toString().trim();
+  }
+
+  // Parse Android model out of the classic User-Agent string as a fallback
+  // for browsers without the userAgentData API (Firefox, older Chrome, etc).
+  function parseModelFromUA(ua) {
+    ua = ua || '';
+    var m = ua.match(/Android[^;]*;\s*([^;)]+?)\s*(?:Build\/|\))/i);
+    if (m && m[1]) {
+      var model = m[1].trim();
+      if (model && !/^(K|wv|Mobile|Tablet)$/i.test(model)) return model;
+    }
+    if (/iPad/i.test(ua)) return 'iPad';
+    if (/iPhone/i.test(ua)) return 'iPhone';
+    return '';
+  }
+
+  function guessIphoneFromScreen() {
+    var w = Math.min(window.screen.width, window.screen.height);
+    var h = Math.max(window.screen.width, window.screen.height);
+    var dpr = window.devicePixelRatio || 2;
+    for (var i = 0; i < IOS_SCREEN_MAP.length; i++) {
+      var e = IOS_SCREEN_MAP[i];
+      if (e.w === w && e.h === h && Math.round(e.dpr) === Math.round(dpr)) return e;
+    }
+    return null;
+  }
+
+  function getGPURenderer() {
+    try {
+      var canvas = document.createElement('canvas');
+      var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) return '';
+      var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+      if (!dbg) return '';
+      return (gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || '').toString();
+    } catch (e) { return ''; }
+  }
+
+  // When the exact model isn't in MODEL_DB, estimate a fair tier from
+  // raw hardware signals so we still hand back a usable DPI/RAM guess
+  // instead of forcing the player to pick blind.
+  function estimateTierFromHardware(hw) {
+    var score = 0;
+    var mem = hw.deviceMemory || 0;   // GB, Chrome caps this at 8
+    var cores = hw.cores || 0;
+    var gpu = (hw.gpu || '').toLowerCase();
+
+    if (mem >= 8) score += 3; else if (mem >= 6) score += 2; else if (mem >= 4) score += 1;
+    if (cores >= 8) score += 2; else if (cores >= 6) score += 1;
+    if (/adreno 7|adreno 6[5-9]|apple gpu|mali-g7|xclipse|immortalis/.test(gpu)) score += 3;
+    else if (/adreno 6[0-4]|mali-g5|mali-g6/.test(gpu)) score += 1;
+    else if (/adreno [1-5]|mali-t|mali-g3|mali-g4/.test(gpu)) score -= 1;
+
+    if (score >= 6) return { r: 8, d: 560, tier: 'Flagship' };
+    if (score >= 4) return { r: 8, d: 500, tier: 'High-end' };
+    if (score >= 2) return { r: 6, d: 440, tier: 'Mid-range' };
+    return { r: 4, d: 390, tier: 'Entry-level' };
+  }
+
+  // Main entry: gathers everything the browser will give us.
+  // Returns a Promise resolving to { raw, source, hw }.
+  function detectFromBrowser() {
+    var hw = {
+      deviceMemory: navigator.deviceMemory || null,
+      cores: navigator.hardwareConcurrency || null,
+      gpu: getGPURenderer(),
+      dpr: window.devicePixelRatio || 1
+    };
+
+    function finishWithUAFallback() {
+      var raw = parseModelFromUA(navigator.userAgent);
+      if (raw === 'iPhone' || raw === 'iPad') {
+        var guess = guessIphoneFromScreen();
+        if (guess) return Promise.resolve({ raw: guess.l, source: 'screen', hw: hw, screenDpi: guess.d });
+        return Promise.resolve({ raw: raw, source: 'ua-generic', hw: hw });
+      }
+      return Promise.resolve({ raw: normalizeRaw(raw), source: raw ? 'ua' : 'none', hw: hw });
+    }
+
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+      return navigator.userAgentData.getHighEntropyValues(['model', 'platform'])
+        .then(function (ua) {
+          if (ua && ua.model) {
+            return { raw: normalizeRaw(ua.model), source: 'uach', hw: hw };
+          }
+          return finishWithUAFallback();
+        })
+        .catch(finishWithUAFallback);
+    }
+    return finishWithUAFallback();
   }
 
   // ──────────────────────────────────────────
@@ -388,20 +545,93 @@
       }
       if (!silent) showToast('Berjaya dikesan: ' + match.l + '. Jenama + RAM + DPI auto-set!', 'success', '🎯');
     } else {
+      // 🆕 Not in the hand-written DB — instead of a dead end, estimate a
+      // fair tier from real hardware signals (RAM, CPU cores, GPU) so the
+      // player still gets usable numbers, e.g. for an ASUS ROG Phone or
+      // any device we haven't hard-coded a name for.
+      var hw = { deviceMemory: navigator.deviceMemory || null, cores: navigator.hardwareConcurrency || null, gpu: getGPURenderer() };
+      var est = estimateTierFromHardware(hw);
       state.modelName = raw;
-      state.detectedLabel = raw + ' (Custom)';
-      // Guess brand from common substrings only
-      var guess = findModelInDB(raw);
-      if (!guess) guess = null;
+      state.detectedLabel = raw + ' (Auto-anggar: ' + est.tier + ')';
+      state.suggestedDpi = est.d;
+      selectRamUI(est.r);
+      if (dpiInput) dpiInput.value = String(est.d);
+      state.dpi = est.d;
+      if (!dpiToggle) {} else if (!state.dpiEnabled) { dpiToggle.checked = true; state.dpiEnabled = true; if (dpiPanel) dpiPanel.style.display = 'block'; }
       if (modelHint) {
-        modelHint.innerHTML = '<span style="color:var(--fire);font-weight:600;">⚠️ Model tiada dalam DB. Jenama + RAM tidak auto-set. Sila pilih secara manual atas!</span>';
+        modelHint.innerHTML = '<span style="color:var(--fire);font-weight:600;">⚠️ "' + raw + '" tiada nama dalam DB kami — tapi RAM/DPI dah auto-anggar (' + est.tier + ') guna spec pelayar peranti anda. Boleh adjust jenama/RAM manual atas jika tak tepat.</span>';
       }
-      if (!silent) showToast('Model tiada dalam DB. Sila pilih jenama & RAM secara manual.', 'info', '📒');
+      if (!silent) showToast('"' + raw + '" xdak dalam DB, tapi auto-anggar guna spec peranti: ' + est.tier + '.', 'info', '📡');
     }
   }
   if (btnModelDetect) {
     btnModelDetect.addEventListener('click', function () { runAutoDetect(false); });
   }
+
+  // ──────────────────────────────────────────
+  // 🆕 AUTO-DETECT DARI PELAYAR (BROWSER)
+  // ──────────────────────────────────────────
+  var btnBrowserDetect = document.getElementById('btnBrowserDetect');
+  var browserDetectResult = document.getElementById('browserDetectResult');
+
+  function runBrowserDetect(silent) {
+    if (silent === undefined) silent = false;
+    if (btnBrowserDetect) { btnBrowserDetect.classList.add('is-loading'); btnBrowserDetect.textContent = '📡 Mengesan...'; }
+    detectFromBrowser().then(function (info) {
+      if (btnBrowserDetect) { btnBrowserDetect.classList.remove('is-loading'); btnBrowserDetect.textContent = '🛰️ Auto-Detect Pelayar'; }
+      if (!info.raw) {
+        if (browserDetectResult) {
+          browserDetectResult.style.display = 'block';
+          browserDetectResult.innerHTML = '<span class="bd-tag estimate">⚠️ Terhad</span>Pelayar anda tidak dedahkan nama model (biasa pada iOS/Safari atau mod privasi). Sila taip model secara manual bawah.';
+        }
+        if (!silent) showToast('Pelayar tidak dapat dedahkan model peranti. Taip manual je.', 'info', 'ℹ️');
+        return;
+      }
+      if (modelInput) modelInput.value = info.raw;
+      var match = findModelInDB(info.raw);
+      if (match) {
+        state.modelName = match.l;
+        state.detectedLabel = match.l + ' (dari pelayar)';
+        state.suggestedDpi = match.d;
+        selectBrandUI(match.b);
+        selectRamUI(match.r);
+        if (dpiInput) dpiInput.value = String(match.d);
+        state.dpi = match.d;
+        if (!dpiToggle) {} else if (!state.dpiEnabled) { dpiToggle.checked = true; state.dpiEnabled = true; if (dpiPanel) dpiPanel.style.display = 'block'; }
+        if (modelHint) modelHint.innerHTML = '<span style="color:var(--success);font-weight:700;">✅ Dikesan dari pelayar: ' + match.l + ' · ' + match.r + 'GB RAM · DPI ' + match.d + '</span>';
+        if (browserDetectResult) {
+          browserDetectResult.style.display = 'block';
+          browserDetectResult.innerHTML = '<span class="bd-tag">✅ Padan DB</span>Raw signal pelayar: "' + info.raw + '" → ' + match.l;
+        }
+        if (!silent) showToast('Dikesan dari pelayar: ' + match.l + '!', 'success', '🛰️');
+      } else {
+        var est = estimateTierFromHardware(info.hw || {});
+        var dpiFinal = info.screenDpi || est.d;
+        state.modelName = info.raw;
+        state.detectedLabel = info.raw + ' (Auto-anggar: ' + est.tier + ')';
+        state.suggestedDpi = dpiFinal;
+        selectRamUI(est.r);
+        if (dpiInput) dpiInput.value = String(dpiFinal);
+        state.dpi = dpiFinal;
+        if (!dpiToggle) {} else if (!state.dpiEnabled) { dpiToggle.checked = true; state.dpiEnabled = true; if (dpiPanel) dpiPanel.style.display = 'block'; }
+        if (modelHint) modelHint.innerHTML = '<span style="color:var(--fire);font-weight:600;">⚠️ "' + info.raw + '" (dari pelayar) tiada dalam DB nama — RAM/DPI auto-anggar guna spec hardware (' + est.tier + ').</span>';
+        if (browserDetectResult) {
+          browserDetectResult.style.display = 'block';
+          var hwBits = [];
+          if (info.hw && info.hw.deviceMemory) hwBits.push(info.hw.deviceMemory + 'GB RAM');
+          if (info.hw && info.hw.cores) hwBits.push(info.hw.cores + ' cores');
+          browserDetectResult.innerHTML = '<span class="bd-tag estimate">📡 Auto-anggar</span>Raw signal: "' + info.raw + '"' + (hwBits.length ? ' · ' + hwBits.join(' · ') : '') + ' → tier ' + est.tier;
+        }
+        if (!silent) showToast('Raw model "' + info.raw + '" xdak dalam DB nama, tapi auto-anggar: ' + est.tier + '.', 'info', '📡');
+      }
+    });
+  }
+  if (btnBrowserDetect) {
+    btnBrowserDetect.addEventListener('click', function () { runBrowserDetect(false); });
+  }
+  // Quietly try once on page load so the field is pre-filled — the
+  // player can still edit or re-run manually, nothing is forced.
+  runBrowserDetect(true);
   if (modelInput) {
     // Auto-detect on Enter key
     modelInput.addEventListener('keydown', function (e) {
