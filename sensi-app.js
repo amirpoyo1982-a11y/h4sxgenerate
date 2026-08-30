@@ -881,7 +881,7 @@
     if (typeof confetti === 'undefined') return;
     var duration = 2000;
     var end = Date.now() + duration;
-    var colors = ['#7c3aed', '#f472b6', '#fbbf24', '#60a5fa', '#ef4444'];
+    var colors = ['#cba14f', '#b3122f', '#f2c14e', '#e2672b', '#f0d998'];
     (function frame() {
       try {
         confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: colors });
@@ -917,7 +917,7 @@
       applySensiToUI(result);
       if (resultSection) resultSection.style.display = 'block';
       if (typeof confetti !== 'undefined') {
-        try { confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, colors: ['#7c3aed', '#f472b6', '#fbbf24', '#60a5fa'] }); } catch (e) {}
+        try { confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, colors: ['#cba14f', '#b3122f', '#f2c14e', '#e2672b'] }); } catch (e) {}
       }
       setTimeout(function () {
         if (resultSection) resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1037,7 +1037,7 @@
       copyText(fullText).then(function () {
         showToast('Semua nilai + DPI disalin! Skala 0-200 terkini FF 2026.', 'success', '✨');
         if (typeof confetti !== 'undefined') {
-          try { confetti({ particleCount: 80, spread: 80, origin: { y: 0.6 }, colors: ['#fbbf24', '#f472b6', '#7c3aed'] }); } catch (e) {}
+          try { confetti({ particleCount: 80, spread: 80, origin: { y: 0.6 }, colors: ['#f2c14e', '#b3122f', '#cba14f'] }); } catch (e) {}
         }
       }).catch(function () { alert(fullText); });
     });
@@ -1076,7 +1076,7 @@
       if (hoverTimer) clearInterval(hoverTimer);
       hoverTimer = setInterval(function () {
         try {
-          confetti({ particleCount: 5, angle: 60, spread: 40, origin: { x: 0, y: 0.95 }, colors: ['#f472b6', '#7c3aed', '#fbbf24'], startVelocity: 25 });
+          confetti({ particleCount: 5, angle: 60, spread: 40, origin: { x: 0, y: 0.95 }, colors: ['#b3122f', '#cba14f', '#f2c14e'], startVelocity: 25 });
         } catch (e) {}
       }, 150);
     });
