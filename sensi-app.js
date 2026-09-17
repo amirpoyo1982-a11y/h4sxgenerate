@@ -17,7 +17,13 @@
     if (icon === undefined) icon = '✅';
     var toast = document.createElement('div');
     toast.className = 'toast ' + type;
-    toast.innerHTML = '<span class="toast-icon">' + icon + '</span><span>' + msg + '</span>';
+    var iconEl = document.createElement('span');
+    iconEl.className = 'toast-icon';
+    iconEl.textContent = icon;
+    var messageEl = document.createElement('span');
+    messageEl.textContent = msg;
+    toast.appendChild(iconEl);
+    toast.appendChild(messageEl);
     if (toastStack) toastStack.appendChild(toast);
     setTimeout(function () {
       toast.classList.add('out');
@@ -43,12 +49,29 @@
   // ──────────────────────────────────────────
   // PAGE LOADER
   // ──────────────────────────────────────────
-  window.addEventListener('load', function () {
-    setTimeout(function () {
-      var loader = document.getElementById('pageLoader');
-      if (loader) loader.classList.add('hidden');
-    }, 900);
-  });
+  var loaderDismissed = false;
+  function dismissLoader() {
+    if (loaderDismissed) return;
+    loaderDismissed = true;
+    var loader = document.getElementById('pageLoader');
+    if (loader) {
+      loader.classList.add('hidden');
+      loader.setAttribute('aria-hidden', 'true');
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { setTimeout(dismissLoader, 280); }, { once: true });
+  } else {
+    setTimeout(dismissLoader, 280);
+  }
+  window.addEventListener('load', dismissLoader, { once: true });
+  setTimeout(dismissLoader, 1800);
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+    });
+  }
 
   // ──────────────────────────────────────────
   // STATE
@@ -559,7 +582,7 @@
       state.dpi = est.d;
       if (!dpiToggle) {} else if (!state.dpiEnabled) { dpiToggle.checked = true; state.dpiEnabled = true; if (dpiPanel) dpiPanel.style.display = 'block'; }
       if (modelHint) {
-        modelHint.innerHTML = '<span style="color:var(--fire);font-weight:600;">⚠️ "' + raw + '" tiada nama dalam DB kami — tapi RAM/DPI dah auto-anggar (' + est.tier + ') guna spec pelayar peranti anda. Boleh adjust jenama/RAM manual atas jika tak tepat.</span>';
+        modelHint.innerHTML = '<span style="color:var(--fire);font-weight:600;">⚠️ "' + escapeHtml(raw) + '" tiada nama dalam DB kami — tapi RAM/DPI dah auto-anggar (' + est.tier + ') guna spec pelayar peranti anda. Boleh adjust jenama/RAM manual atas jika tak tepat.</span>';
       }
       if (!silent) showToast('"' + raw + '" xdak dalam DB, tapi auto-anggar guna spec peranti: ' + est.tier + '.', 'info', '📡');
     }
@@ -614,7 +637,7 @@
         if (dpiInput) dpiInput.value = String(dpiFinal);
         state.dpi = dpiFinal;
         if (!dpiToggle) {} else if (!state.dpiEnabled) { dpiToggle.checked = true; state.dpiEnabled = true; if (dpiPanel) dpiPanel.style.display = 'block'; }
-        if (modelHint) modelHint.innerHTML = '<span style="color:var(--fire);font-weight:600;">⚠️ "' + info.raw + '" (dari pelayar) tiada dalam DB nama — RAM/DPI auto-anggar guna spec hardware (' + est.tier + ').</span>';
+        if (modelHint) modelHint.innerHTML = '<span style="color:var(--fire);font-weight:600;">⚠️ "' + escapeHtml(info.raw) + '" (dari pelayar) tiada dalam DB nama — RAM/DPI auto-anggar guna spec hardware (' + est.tier + ').</span>';
         if (browserDetectResult) {
           browserDetectResult.style.display = 'block';
           var hwBits = [];
@@ -878,17 +901,11 @@
   var btnGenerate = document.getElementById('btnGenerate');
   var resultSection = document.getElementById('resultSection');
   function fireConfettiBurst() {
-    if (typeof confetti === 'undefined') return;
-    var duration = 2000;
-    var end = Date.now() + duration;
-    var colors = ['#cba14f', '#b3122f', '#f2c14e', '#e2672b', '#f0d998'];
-    (function frame() {
-      try {
-        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: colors });
-        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: colors });
-      } catch (e) {}
-      if (Date.now() < end) requestAnimationFrame(frame);
-    })();
+    if (typeof confetti === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    try {
+      confetti({ particleCount: 42, spread: 58, startVelocity: 26, ticks: 130,
+        origin: { y: 0.74 }, colors: ['#a6a5ff', '#39c6e2', '#d4d3ff'] });
+    } catch (e) {}
   }
   if (btnGenerate) {
     btnGenerate.addEventListener('click', function () {
@@ -916,9 +933,7 @@
       var result = computeSensitivity();
       applySensiToUI(result);
       if (resultSection) resultSection.style.display = 'block';
-      if (typeof confetti !== 'undefined') {
-        try { confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, colors: ['#cba14f', '#b3122f', '#f2c14e', '#e2672b'] }); } catch (e) {}
-      }
+      fireConfettiBurst();
       setTimeout(function () {
         if (resultSection) resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         var nm = (PRO_PRESETS[preset] && PRO_PRESETS[preset].name) || preset;
@@ -1036,9 +1051,7 @@
       var fullText = lines.join('\n');
       copyText(fullText).then(function () {
         showToast('Semua nilai + DPI disalin! Skala 0-200 terkini FF 2026.', 'success', '✨');
-        if (typeof confetti !== 'undefined') {
-          try { confetti({ particleCount: 80, spread: 80, origin: { y: 0.6 }, colors: ['#f2c14e', '#b3122f', '#cba14f'] }); } catch (e) {}
-        }
+        fireConfettiBurst();
       }).catch(function () { alert(fullText); });
     });
   }
@@ -1064,26 +1077,6 @@
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
-
-  // ──────────────────────────────────────────
-  // HERO CTA: mini confetti on hover
-  // ──────────────────────────────────────────
-  var heroCta = document.querySelector('.hero-cta');
-  if (heroCta) {
-    var hoverTimer = null;
-    heroCta.addEventListener('mouseenter', function () {
-      if (typeof confetti === 'undefined') return;
-      if (hoverTimer) clearInterval(hoverTimer);
-      hoverTimer = setInterval(function () {
-        try {
-          confetti({ particleCount: 5, angle: 60, spread: 40, origin: { x: 0, y: 0.95 }, colors: ['#b3122f', '#cba14f', '#f2c14e'], startVelocity: 25 });
-        } catch (e) {}
-      }, 150);
-    });
-    heroCta.addEventListener('mouseleave', function () {
-      if (hoverTimer) { clearInterval(hoverTimer); hoverTimer = null; }
-    });
-  }
 
   // ──────────────────────────────────────────
   // COMPAT: logoutAdmin, window globals
